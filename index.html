@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deutsch Quiz – Die Uhrzeit</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f6f8;margin:0;color:#1f2937}
+.wrap{max-width:760px;margin:30px auto;padding:18px}
+.card{background:white;border-radius:18px;padding:24px;box-shadow:0 4px 18px #0001}
+h1{margin-top:0}.muted{color:#667085}
+.q{font-size:20px;font-weight:700;margin:22px 0 14px;direction:ltr;text-align:left}
+.options button{display:block;width:100%;margin:10px 0;padding:13px;border:1px solid #d0d5dd;border-radius:10px;background:#fff;text-align:left;font-size:17px;cursor:pointer;direction:ltr}
+.options button:hover{background:#f2f4f7}
+.options button:disabled{cursor:default}
+.correct{background:#dcfce7!important;border-color:#22c55e!important}
+.wrong{background:#fee2e2!important;border-color:#ef4444!important}
+.feedback{margin-top:14px;padding:12px;border-radius:10px;display:none}
+.next,.start{margin-top:18px;padding:13px 22px;border:0;border-radius:10px;background:#111827;color:white;font-size:16px;cursor:pointer}
+.progress{height:9px;background:#e5e7eb;border-radius:20px;overflow:hidden}.bar{height:100%;width:0;background:#111827}
+.result{text-align:center}.score{font-size:48px;font-weight:800;margin:15px}
+.hidden{display:none}.name{padding:12px;width:100%;box-sizing:border-box;border:1px solid #d0d5dd;border-radius:10px;font-size:16px}
+.badge{display:inline-block;background:#eef2ff;padding:6px 10px;border-radius:20px;margin:3px}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+<h1>🇩🇪 Deutsch Quiz: Die Uhrzeit</h1>
+<p class="muted">مستوى متوسط • الطريقة الرسمية وغير الرسمية • 15 سؤالًا</p>
+<div id="startScreen">
+<p>اكتب اسمك (اختياري):</p>
+<input id="studentName" class="name" placeholder="اسم الطالب">
+<button class="start" onclick="startQuiz()">ابدأ الاختبار</button>
+</div>
+<div id="quiz" class="hidden">
+<div class="progress"><div id="bar" class="bar"></div></div>
+<p id="counter" class="muted"></p>
+<div id="question"></div><div id="options" class="options"></div>
+<div id="feedback" class="feedback"></div>
+<button id="next" class="next hidden" onclick="nextQuestion()">السؤال التالي ←</button>
+</div>
+<div id="result" class="hidden result">
+<h2>🎉 انتهى الاختبار</h2><div id="score" class="score"></div>
+<div id="resultText"></div>
+<button class="start" onclick="location.reload()">إعادة الاختبار</button>
+</div>
+</div></div>
+<script>
+const questions=[
+{q:"Wie spät ist es? 07:15",o:["Es ist Viertel nach sieben.","Es ist Viertel vor sieben.","Es ist sieben Uhr fünfzehn vor.","Es ist halb sieben."],a:0,e:"07:15 = Viertel nach sieben (غير رسمي)."},
+{q:"Wie spät ist es? 08:30",o:["Es ist halb neun.","Es ist halb acht.","Es ist dreißig nach neun.","Es ist Viertel nach acht."],a:0,e:"08:30 = halb neun. في الألمانية يشير halb إلى الساعة التالية."},
+{q:"Wie spät ist es? 09:45",o:["Es ist Viertel nach zehn.","Es ist Viertel vor zehn.","Es ist Viertel vor neun.","Es ist neun Uhr fünfundvierzig vor."],a:1,e:"09:45 = Viertel vor zehn."},
+{q:"Welche formelle Uhrzeit passt zu „Viertel nach drei“?",o:["15:15 Uhr","03:45 Uhr","15:45 Uhr","14:15 Uhr"],a:0,e:"Viertel nach drei = 15:15 Uhr."},
+{q:"Welche informelle Form passt zu 17:45?",o:["Viertel nach fünf","Viertel vor sechs","halb sechs","fünf Uhr fünfundvierzig"],a:1,e:"17:45 = Viertel vor sechs."},
+{q:"Wie sagt man 06:05 formell?",o:["Es ist fünf nach sechs.","Es ist sechs Uhr fünf.","Es ist fünf vor sechs.","Es ist sechs nach fünf."],a:1,e:"في الطريقة الرسمية: Es ist sechs Uhr fünf."},
+{q:"Wie sagt man 06:05 informell?",o:["Es ist fünf nach sechs.","Es ist fünf vor sechs.","Es ist Viertel nach sechs.","Es ist halb sechs."],a:0,e:"06:05 = fünf nach sechs."},
+{q:"„Zwanzig vor elf“ entspricht:",o:["10:20","10:40","11:20","11:40"],a:1,e:"zwanzig vor elf = 10:40."},
+{q:"„Zehn nach halb zwei“ entspricht:",o:["01:20","01:40","02:10","02:40"],a:1,e:"halb zwei = 01:30، وبعدها عشر دقائق = 01:40."},
+{q:"Welche formelle Zeit entspricht „halb acht“?",o:["07:30 Uhr","08:30 Uhr","07:15 Uhr","08:00 Uhr"],a:0,e:"halb acht = 07:30 Uhr."},
+{q:"Wie spät ist es? 12:00",o:["Es ist Mittag.","Es ist Mitternacht.","Es ist halb zwölf.","Es ist Viertel vor zwölf."],a:0,e:"12:00 = Mittag. (00:00 = Mitternacht.)"},
+{q:"Welche formelle Form ist korrekt für 21:35?",o:["Es ist fünf nach halb zehn.","Es ist einundzwanzig Uhr fünfunddreißig.","Es ist Viertel vor zehn.","Es ist halb zehn."],a:1,e:"الطريقة الرسمية: 21:35 = einundzwanzig Uhr fünfunddreißig."},
+{q:"„Fünf vor halb vier“ entspricht:",o:["03:25","03:35","04:25","04:35"],a:0,e:"halb vier = 03:30، خمس دقائق قبلها = 03:25."},
+{q:"„Fünf nach halb neun“ entspricht:",o:["08:25","08:35","09:05","09:35"],a:1,e:"halb neun = 08:30، وبعدها خمس دقائق = 08:35."},
+{q:"Wie sagt man 23:50 informell?",o:["zehn vor zwölf","zehn nach elf","fünfzig nach elf","Viertel vor zwölf"],a:0,e:"23:50 = zehn vor zwölf."}
+];
+let i=0,score=0,answered=false,name="";
+function startQuiz(){name=document.getElementById("studentName").value.trim();document.getElementById("startScreen").classList.add("hidden");document.getElementById("quiz").classList.remove("hidden");show();}
+function show(){
+answered=false;document.getElementById("counter").textContent=`السؤال ${i+1} من ${questions.length}`;
+document.getElementById("bar").style.width=((i)/questions.length*100)+"%";
+const x=questions[i];document.getElementById("question").innerHTML=`<div class="q">${x.q}</div>`;
+const box=document.getElementById("options");box.innerHTML="";
+x.o.forEach((v,n)=>{let b=document.createElement("button");b.textContent=v;b.onclick=()=>answer(n,b);box.appendChild(b)});
+document.getElementById("feedback").style.display="none";document.getElementById("next").classList.add("hidden");
+}
+function answer(n,btn){
+if(answered)return;answered=true;const x=questions[i];const bs=document.querySelectorAll(".options button");bs.forEach(b=>b.disabled=true);
+if(n===x.a){score++;btn.classList.add("correct");setFeedback("✅ إجابة صحيحة!","correct")}
+else{btn.classList.add("wrong");bs[x.a].classList.add("correct");setFeedback("❌ إجابة غير صحيحة. الحل الصحيح: "+x.o[x.a]+"<br>"+x.e,"wrong")}
+document.getElementById("bar").style.width=((i+1)/questions.length*100)+"%";document.getElementById("next").classList.remove("hidden");
+}
+function setFeedback(t,c){const f=document.getElementById("feedback");f.innerHTML=t;f.style.display="block";f.className="feedback "+c}
+function nextQuestion(){i++;if(i<questions.length)show();else finish()}
+function finish(){
+document.getElementById("quiz").classList.add("hidden");document.getElementById("result").classList.remove("hidden");
+const pct=Math.round(score/questions.length*100);document.getElementById("score").textContent=`${score} / ${questions.length} = ${pct}%`;
+document.getElementById("resultText").innerHTML=(name?`<p><b>${name}</b></p>`:"")+`<p>تم احتساب درجتك تلقائيًا.</p><p><span class="badge">الطريقة الرسمية</span><span class="badge">الطريقة غير الرسمية</span><span class="badge">مستوى متوسط</span></p>`;
+}
+</script>
+</body></html>
